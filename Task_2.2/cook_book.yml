@@ -1,0 +1,74 @@
+Омлет:
+  - ingridient_name: Яйца
+    quantity: 2
+    measure: шт
+  - ingridient_name: Молоко
+    quantity: 50
+    measure: гр
+  - ingridient_name: Помидор
+    quantity: 100
+    measure: мл
+
+Яйчница:
+  - ingridient_name: Яйца
+    quantity: 2
+    measure: шт
+  - ingridient_name: Помидоры
+    quantity: 100
+    measure: гр
+
+Стейк:
+  - ingridient_name: Говядина
+    quantity: 300
+    measure: гр
+  - ingridient_name: Специи
+    quantity: 5
+    measure: гр
+  - ingridient_name: Масло
+    quantity: 10
+    measure: мл
+
+Салат:
+  - ingridient_name: Помидоры
+    quantity: 100
+    measure: гр
+  - ingridient_name: Огурцы
+    quantity: 100
+    measure: гр
+  - ingridient_name: Масло
+    quantity: 100
+    measure: мл
+  - ingridient_name: Лук
+    quantity: 1
+    measure: шт
+
+Пельмени:
+  - ingridient_name: Мука
+    quantity: 200
+    measure: гр
+  - ingridient_name: Яйца
+    quantity: 1
+    measure: шт
+  - ingridient_name: Фарш
+    quantity: 200
+    measure: гр
+  - ingridient_name: Вода
+    quantity: 100
+    measure: мл
+
+Пицца:
+  - ingridient_name: Мука
+    quantity: 100
+    measure: гр
+  - ingridient_name: Яйца
+    quantity: 1
+    measure: шт
+  - ingridient_name: Помидоры
+    quantity: 100
+    measure: гр
+  - ingridient_name: Масло
+    quantity: 50
+    measure: мл
+  - ingridient_name: Сыр
+    quantity: 100
+    measure: гр

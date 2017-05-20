@@ -1,10 +1,26 @@
-﻿ingridient_name | quantity | measure
+ingridient_name | quantity | measure
 
-Омлет
-3
-Яйца | 2 | шт
-Молоко | 50 | гр
-Помидоры | 100 | мл
+- dish: Омлет
+  ingridients:
+  - ingridient_name: Яйца
+    quantity: 2
+    measure: шт
+  - ingridient_name: Молоко
+    quantity: 50
+    measure: гр
+  - ingridient_name: Помидор
+    quantity: 100
+    measure: мл
+
+- dish: Яйчница
+  ingridients:
+  - ingridient_name: Яйца
+    quantity: 2
+    measure: шт
+  - ingridient_name: Помидоры
+    quantity: 100
+    measure: гр
+
 
 Яйчница
 2
