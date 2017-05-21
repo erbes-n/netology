@@ -1,4 +1,4 @@
-﻿ingridient_name | quantity | measure
+ingridient_name | quantity | measure
 
 Омлет
 3
