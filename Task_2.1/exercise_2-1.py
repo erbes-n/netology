@@ -1,4 +1,3 @@
-import pprint
 def open_cook_book(file_name):
     cook_book = {}
     with open(file_name, encoding = "utf8") as cb:
