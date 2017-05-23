@@ -1,74 +1,74 @@
-Омлет:
-  - ingridient_name: Яйца
+омлет:
+  - ingridient_name: яйца
     quantity: 2
     measure: шт
-  - ingridient_name: Молоко
+  - ingridient_name: молоко
     quantity: 50
     measure: гр
-  - ingridient_name: Помидор
+  - ingridient_name: помидор
     quantity: 100
     measure: мл
 
-Яйчница:
-  - ingridient_name: Яйца
+яйчница:
+  - ingridient_name: яйца
     quantity: 2
     measure: шт
-  - ingridient_name: Помидоры
+  - ingridient_name: помидоры
     quantity: 100
     measure: гр
 
-Стейк:
-  - ingridient_name: Говядина
+стейк:
+  - ingridient_name: говядина
     quantity: 300
     measure: гр
-  - ingridient_name: Специи
+  - ingridient_name: специи
     quantity: 5
     measure: гр
-  - ingridient_name: Масло
+  - ingridient_name: масло
     quantity: 10
     measure: мл
 
-Салат:
-  - ingridient_name: Помидоры
+салат:
+  - ingridient_name: помидоры
     quantity: 100
     measure: гр
-  - ingridient_name: Огурцы
+  - ingridient_name: огурцы
     quantity: 100
     measure: гр
-  - ingridient_name: Масло
+  - ingridient_name: масло
     quantity: 100
     measure: мл
-  - ingridient_name: Лук
+  - ingridient_name: лук
     quantity: 1
     measure: шт
 
-Пельмени:
-  - ingridient_name: Мука
+пельмени:
+  - ingridient_name: мука
     quantity: 200
     measure: гр
-  - ingridient_name: Яйца
+  - ingridient_name: яйца
     quantity: 1
     measure: шт
-  - ingridient_name: Фарш
+  - ingridient_name: фарш
     quantity: 200
     measure: гр
-  - ingridient_name: Вода
+  - ingridient_name: вода
     quantity: 100
     measure: мл
 
-Пицца:
-  - ingridient_name: Мука
+пицца:
+  - ingridient_name: мука
     quantity: 100
     measure: гр
-  - ingridient_name: Яйца
+  - ingridient_name: яйца
     quantity: 1
     measure: шт
-  - ingridient_name: Помидоры
+  - ingridient_name: помидоры
     quantity: 100
     measure: гр
-  - ingridient_name: Масло
+  - ingridient_name: масло
     quantity: 50
     measure: мл
-  - ingridient_name: Сыр
+  - ingridient_name: сыр
     quantity: 100
     measure: гр
