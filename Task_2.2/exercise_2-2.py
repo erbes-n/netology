@@ -2,13 +2,7 @@ import yaml
 
 def open_cook_book_yml(file_name):
     with open(file_name, encoding = "utf8") as cb:
-        new_cb = yaml.load(cb)
-        cook_book = {dish.lower().strip(): value for dish, value in new_cb.items()}
-        for dish in cook_book:
-            for i, ingr in enumerate(cook_book[dish]):
-                ingr = {key: value.lower().strip() for key, value in ingr.items() if key != "quantity"}
-                for key in ingr:
-                    cook_book[dish][i][key] = ingr[key]
+        cook_book = yaml.load(cb)
     return cook_book
 
 def get_shop_list_by_dishes(dishes, person_count, cook_book):
