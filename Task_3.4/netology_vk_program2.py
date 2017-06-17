@@ -44,8 +44,6 @@ def search_mutual_friends_by_id(requested_friends_id_list, method, access_token,
 				mutual_friends_id_list = list(mutual_friends_id_set)
 				new_mutual_friends_list = [friend for friend in all_friends_list for friend_id in mutual_friends_id_list
 											if friend['id'] == friend_id]
-			# print(friend_id)
-			# pprint(mutual_friends_id_set)
 		except LookupError:
 			excluded_friends.append(friend_id)
 			continue
