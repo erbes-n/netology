@@ -88,17 +88,20 @@ FIELDS = 'nickname'
 ORDER = 'name'
 FIRST_ID = input('Введите id пользователя: ')
 
-initial_response = request_to_vk_api(METHOD_USER_GET, SYSTEM_TOKEN, VERSION, FIRST_ID, FIELDS)
-initial_user = initial_response.json()['response'][0]
-response = request_to_vk_api(METHOD_FRIENDS_GET, SYSTEM_TOKEN, VERSION, FIRST_ID, FIELDS, ORDER)
-friends_list = sorted(response.json()['response']['items'], key=lambda d: d['last_name'])
-friends_list.insert(0, initial_user)
-print_friends_list(friends_list)
-while True:
-	friend_list_for_search = input('Введите через запятую номера друзей, для которых следует найти общих друзей: ')
-	friend_list_for_search = friend_list_for_search.split(",")
-	friends_id_list = [friends_list[int(number)]['id'] for number in friend_list_for_search]
-	search_result = search_mutual_friends_by_id(friends_id_list, METHOD_FRIENDS_GET, SYSTEM_TOKEN, VERSION, FIELDS)
-	mutual_friends_list = search_result[0]
-	excluded_friends_id_list = search_result[1]
-	print_mutual_friends(friends_list, friends_id_list, mutual_friends_list, excluded_friends_id_list)
+try:
+	initial_response = request_to_vk_api(METHOD_USER_GET, SYSTEM_TOKEN, VERSION, FIRST_ID, FIELDS)
+	initial_user = initial_response.json()['response'][0]
+	response = request_to_vk_api(METHOD_FRIENDS_GET, SYSTEM_TOKEN, VERSION, FIRST_ID, FIELDS, ORDER)
+	friends_list = sorted(response.json()['response']['items'], key=lambda d: d['last_name'])
+	friends_list.insert(0, initial_user)
+	print_friends_list(friends_list)
+	while True:
+		friend_list_for_search = input('Введите через запятую номера друзей, для которых следует найти общих друзей: ')
+		friend_list_for_search = friend_list_for_search.split(",")
+		friends_id_list = [friends_list[int(number)]['id'] for number in friend_list_for_search]
+		search_result = search_mutual_friends_by_id(friends_id_list, METHOD_FRIENDS_GET, SYSTEM_TOKEN, VERSION, FIELDS)
+		mutual_friends_list = search_result[0]
+		excluded_friends_id_list = search_result[1]
+		print_mutual_friends(friends_list, friends_id_list, mutual_friends_list, excluded_friends_id_list)
+except LookupError:
+	print("Невозможно вывести список друзей для данного аккаунта")
