@@ -1,7 +1,5 @@
 # from urllib.parse import urlencode
 import requests
-
-
 # from pprint import pprint
 
 # AUTHORIZE_URL = "https://oauth.vk.com/authorize"
