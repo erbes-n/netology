@@ -1,6 +1,7 @@
 # Коровы, козы, овцы, свиньи
 # Утки, куры, гуси
 
+
 class Animal:
 	def __init__(self, weight, feed_per_kilo, voice):
 		self.weight = weight
