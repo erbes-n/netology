@@ -4,6 +4,9 @@
 
 class Animal:
 
+	def __init__(self, weight):
+		self.weight = weight
+
 	def get_feed(self, weight, feed_per_kilo):
 		return round(weight * feed_per_kilo, 2)
 
@@ -25,9 +28,6 @@ class Pig(Cattle):
 	voice = "wiii"
 	feed_per_kilo = 1
 
-	def __init__(self, weight):
-		self.weight = weight
-
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
 
@@ -38,9 +38,6 @@ class Pig(Cattle):
 class Sheep(Cattle):
 	voice = "beee"
 	feed_per_kilo = 0.1
-
-	def __init__(self, weight):
-		self.weight = weight
 
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
@@ -53,9 +50,6 @@ class Goat(Cattle):
 	voice = "mee"
 	feed_per_kilo = 0.2
 
-	def __init__(self, weight):
-		self.weight = weight
-
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
 
@@ -67,21 +61,16 @@ class Cow(Cattle):
 	voice = "muu"
 	feed_per_kilo = 0.7
 
-	def __init__(self, weight):
-		self.weight = weight
-
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
 
 	def get_voice(self):
 		super().get_voice(self.voice)
 
+
 class Duck(Bird):
 	voice = "quack"
 	feed_per_kilo = 0.2
-
-	def __init__(self, weight):
-		self.weight = weight
 
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
@@ -94,9 +83,6 @@ class Chicken(Bird):
 	voice = "kwok"
 	feed_per_kilo = 0.1
 
-	def __init__(self, weight):
-		self.weight = weight
-
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
 
@@ -107,9 +93,6 @@ class Chicken(Bird):
 class Goose(Bird):
 	voice = "shhh"
 	feed_per_kilo = 0.3
-
-	def __init__(self, weight):
-		self.weight = weight
 
 	def get_feed(self):
 		return super().get_feed(self.weight, self.feed_per_kilo)
