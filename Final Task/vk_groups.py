@@ -5,11 +5,16 @@ import json
 import sys
 from pprint import pprint
 
+FIELDS = 'name,id,members_count'
+VK_API_BASE = 'https://api.vk.com/method/'
+ERR_CODE_FAST = 6
+ERR_CODE_BLOCKED = 18
+
 
 class VkBase:
 	VERSION = "5.67"
-	TOKEN = '04f24c05f7ae8e2b9ae046a5327c06c8034b8b777800f842ae6cc93fa881bbfde5b4c2cf0e933631b966f'
-	# TOKEN = 'd13e692be69592b09fd22c77a590dd34e186e6d696daa88d6d981e1b4e296b14acb377e82dcbc81dc0f22'
+	# TOKEN = '04f24c05f7ae8e2b9ae046a5327c06c8034b8b777800f842ae6cc93fa881bbfde5b4c2cf0e933631b966f'
+	TOKEN = '5dfd6b0dee902310df772082421968f4c06443abecbc082a8440cb18910a56daca73ac8d04b25154a1128'
 
 	def get_params_for_request(self, additional_params):
 		params = {
@@ -19,9 +24,43 @@ class VkBase:
 		params.update(additional_params)
 		return params
 
+	def call(self, url, params):
+		while True:
+			try:
+				response = requests.get(url, params)
+				while 'error' in response.json() and response.json()['error']['error_code'] == ERR_CODE_FAST:
+					time.sleep(1)
+					response = requests.get(url, params)
+				try:
+					status = response.status_code
+					response.raise_for_status()
+				except requests.exceptions.HTTPError as err_info:
+					response = dict()
+					response['error_code'] = status
+					response['info'] = err_info
+					break
+				else:
+					try:
+						response = response.json()['response']
+						break
+					except KeyError as err_info:
+						err_code = response.json()['error']['error_code']
+						response = {}
+						try:
+							response['error_code'] = err_code
+							response['info'] = err_info
+							break
+						except KeyError:
+							response['info'] = err_info
+							break
+			except TimeoutError:
+				print("TimeOut...Sleep")
+				time.sleep(10)
+		return response
+
 
 class VkGroups(VkBase):
-	METHOD_INFO_GROUPS = "https://api.vk.com/method/groups.getById"
+	METHOD_INFO_GROUPS = '{}groups.getById'.format(VK_API_BASE)
 
 	def groups_info(self, group_ids, fields=None):
 		groups_string = ''
@@ -35,21 +74,14 @@ class VkGroups(VkBase):
 			'fields': fields,
 		}
 		params = self.get_params_for_request(additional_params)
-		while True:
-			try:
-				response = requests.get(self.METHOD_INFO_GROUPS, params)
-				break
-			except TimeoutError:
-				print("TimeOut...Sleep")
-				time.sleep(10)
-		result_info = response.json()['response']
+		result_info = self.call(self.METHOD_INFO_GROUPS, params)
 		return result_info
 
 
 class VkUser(VkBase):
-	METHOD_FRIENDS_GET = "https://api.vk.com/method/friends.get"
-	METHOD_USER_GET = "https://api.vk.com/method/users.get"
-	METHOD_GROUPS_GET = "https://api.vk.com/method/groups.get"
+	METHOD_FRIENDS_GET = '{}friends.get'.format(VK_API_BASE)
+	METHOD_USER_GET = '{}users.get'.format(VK_API_BASE)
+	METHOD_GROUPS_GET = '{}groups.get'.format(VK_API_BASE)
 
 	def __init__(self, user_id):
 		self.user_id = user_id
@@ -59,14 +91,8 @@ class VkUser(VkBase):
 			'user_ids': self.user_id,
 		}
 		params = self.get_params_for_request(additional_params)
-		while True:
-			try:
-				response = requests.get(self.METHOD_USER_GET, params)
-				break
-			except TimeoutError:
-				print("TimeOut...Sleep")
-				time.sleep(10)
-		user_true_id = response.json()['response'][0]['id']
+		response = self.call(self.METHOD_USER_GET, params)
+		user_true_id = response[0]['id']
 		return user_true_id
 
 	def friends_list(self, fields=None, order=None):
@@ -77,24 +103,10 @@ class VkUser(VkBase):
 			'order': order
 		}
 		params = self.get_params_for_request(additional_params)
-		response = requests.get(self.METHOD_FRIENDS_GET, params)
-		while 'error' in response.json() and response.json()['error']['error_code'] == 6:
-				time.sleep(1)
-				response = requests.get(self.METHOD_FRIENDS_GET, params)
-		while True:
-			try:
-				friends_list = response.json()['response']['items']
-				break
-			except LookupError as err_info:
-				if response.json()['error']['error_code'] == 18:
-					print("Аккаунт пользователя (id - {}) заблокирован или удален".format(self.user_id))
-					sys.exit(1)
-				else:
-					print('Сведения об исключении:', err_info)
-					sys.exit(1)
-			except TimeoutError:
-				print("TimeOut...Sleep")
-				time.sleep(10)
+		response = self.call(self.METHOD_FRIENDS_GET, params)
+		friends_list = response_handle(response, self.user_id, 1)
+		if friends_list == 0:
+			sys.exit(1)
 		return friends_list
 
 	def groups_list(self, extended=0, fields=None, count=None):
@@ -105,30 +117,14 @@ class VkUser(VkBase):
 			'count': count
 		}
 		params = self.get_params_for_request(additional_params)
-		response = requests.get(self.METHOD_GROUPS_GET, params)
-		result_list = []
-		while 'error' in response.json() and response.json()['error']['error_code'] == 6:
-			time.sleep(1)
-			response = requests.get(self.METHOD_GROUPS_GET, params)
-		while True:
-			try:
-				result_list = response.json()['response']['items']
-				break
-			except LookupError as err_info:
-				if response.json()['error']['error_code'] == 18:
-					result_list = ['blocked']
-					break
-				else:
-					print('Сведения об исключении:', err_info)
-					break
-			except TimeoutError:
-				print("TimeOut...Sleep")
-				time.sleep(10)
+		response = self.call(self.METHOD_GROUPS_GET, params)
+		result_list = response_handle(response, self.user_id)
 		return result_list
 
 	def get_unique_groups_id(self):
 		friends_list = self.friends_list()
-		all_groups_list = []
+
+		all_groups_set = set()
 		excluded_friends_id = []
 		a = 0
 		friends_num = len(friends_list)
@@ -140,11 +136,11 @@ class VkUser(VkBase):
 				print('.')
 			vk_friend = VkUser(friend_id)
 			new_groups_list = vk_friend.groups_list()
-			if 'blocked' not in new_groups_list:
-				all_groups_list.extend(new_groups_list)
-			else:
-				excluded_friends_id.append(friend_id)
-		all_groups_set = set(all_groups_list)
+			if new_groups_list != 0:
+				if 'blocked' not in new_groups_list:
+					all_groups_set.update(new_groups_list)
+				else:
+					excluded_friends_id.append(friend_id)
 		user_groups = set(self.groups_list())
 		unique_groups_id = list(user_groups - all_groups_set)
 		return unique_groups_id, excluded_friends_id
@@ -169,15 +165,44 @@ def create_json_file(group_info_list):
 		json.dump(group_info_list, rfile, ensure_ascii=False)
 
 
-FIELDS = 'name,id,members_count'
+def response_handle(response, user_id=0, mode=0):
+	if 'info' in response.keys():
+		if 'error_code' in response.keys() and response['error_code'] == ERR_CODE_BLOCKED:
+			if mode != 0:
+				print("Аккаунт пользователя (id - {}) заблокирован или удален".format(user_id))
+				result_list = 0
+			else:
+				result_list = ['blocked']
+		elif 'error_code' in response.keys():
+			print(
+				'Ошибка: {0}. id: {1}. Сведения об ошибке: {2}'.format(response['error_code'], user_id, response['info']))
+			result_list = 0
+		else:
+			print('Сведения об исключении:', response['info'])
+			result_list = 0
+	else:
+		result_list = response['items']
+	return result_list
 
-first_id = input('Введите имя пользователя (screen_name) или id:')
-first_user = VkUser(first_id)
-unique_groups = first_user.get_unique_groups_id()[0]
-un_groups_info_list = first_user.get_groups_info(unique_groups, FIELDS)
-create_json_file(un_groups_info_list)
 
-with open(os.path.join(os.getcwd(), "groups.json"), "r", encoding='utf8') as rf:
-	my_json = rf.read()
-	json_object = json.loads(my_json)
-	pprint(json_object)
+def start_run():
+	first_id = input('Введите имя пользователя (screen_name) или id:')
+	return first_id
+
+
+if __name__ == "__main__":
+	start_id = start_run()
+first_user = VkUser(start_id)
+search_groups_result = first_user.get_unique_groups_id()
+unique_groups = search_groups_result[0]
+if not unique_groups:
+	print("Нет уникальных групп для пользователя {}".format(start_id))
+else:
+	un_groups_info_list = first_user.get_groups_info(unique_groups, FIELDS)
+	create_json_file(un_groups_info_list)
+	blocked_ids = search_groups_result[1]
+	print("Из поиска групп были исключены заблокированные/удаленные id друзей: {}".format(blocked_ids))
+	with open(os.path.join(os.getcwd(), "groups.json"), "r", encoding='utf8') as rf:
+		my_json = rf.read()
+		json_object = json.loads(my_json)
+		pprint(json_object)
