@@ -1,8 +1,6 @@
 import time
 import requests
-import os
 import json
-import sys
 from pprint import pprint
 
 FIELDS = 'name,id,members_count'
@@ -28,31 +26,25 @@ class VkBase:
 		while True:
 			try:
 				response = requests.get(url, params)
-				while 'error' in response.json() and response.json()['error']['error_code'] == ERR_CODE_FAST:
-					time.sleep(1)
-					response = requests.get(url, params)
-				try:
-					status = response.status_code
-					response.raise_for_status()
-				except requests.exceptions.HTTPError as err_info:
-					response = dict()
-					response['error_code'] = status
-					response['info'] = err_info
-					break
-				else:
-					try:
-						response = response.json()['response']
+				status = response.status_code
+				response.raise_for_status()
+				content = response.json()
+				if 'error' in content:
+					if content['error']['error_code'] == ERR_CODE_FAST:
+						time.sleep(1)
+						continue
+					else:
+						response = dict()
+						response['error_code'] = content['error']['error_code']
+						response['info'] = content['error']['error_msg']
 						break
-					except KeyError as err_info:
-						err_code = response.json()['error']['error_code']
-						response = {}
-						try:
-							response['error_code'] = err_code
-							response['info'] = err_info
-							break
-						except KeyError:
-							response['info'] = err_info
-							break
+				response = content['response']
+				break
+			except requests.exceptions.HTTPError as err_info:
+				response = dict()
+				response['error_code'] = status
+				response['info'] = err_info
+				break
 			except TimeoutError:
 				print("TimeOut...Sleep")
 				time.sleep(10)
@@ -63,10 +55,8 @@ class VkGroups(VkBase):
 	METHOD_INFO_GROUPS = '{}groups.getById'.format(VK_API_BASE)
 
 	def groups_info(self, group_ids, fields=None):
-		groups_string = ''
-		if type(group_ids) == list:
-			for group_id in group_ids:
-				groups_string += str(group_id) + ','
+		if isinstance(group_ids, list):
+			groups_string = ','.join(map(str, group_ids))
 		else:
 			groups_string = str(group_ids)
 		additional_params = {
@@ -95,8 +85,10 @@ class VkUser(VkBase):
 		user_true_id = response[0]['id']
 		return user_true_id
 
-	def friends_list(self, fields=None, order=None):
+	def set_real_id(self):
 		self.user_id = self.get_id()
+
+	def friends_list(self, fields=None, order=None):
 		additional_params = {
 			'user_id': self.user_id,
 			'fields': fields,
@@ -104,10 +96,7 @@ class VkUser(VkBase):
 		}
 		params = self.get_params_for_request(additional_params)
 		response = self.call(self.METHOD_FRIENDS_GET, params)
-		friends_list = response_handle(response, self.user_id, 1)
-		if friends_list == 0:
-			sys.exit(1)
-		return friends_list
+		return response
 
 	def groups_list(self, extended=0, fields=None, count=None):
 		additional_params = {
@@ -118,31 +107,44 @@ class VkUser(VkBase):
 		}
 		params = self.get_params_for_request(additional_params)
 		response = self.call(self.METHOD_GROUPS_GET, params)
-		result_list = response_handle(response, self.user_id)
-		return result_list
+		return response
+
+	def print_errors(self, response):
+		if 'error_code' in response:
+			if response['error_code'] == ERR_CODE_BLOCKED:
+				print("Аккаунт пользователя (id - {}) заблокирован или удален".format(self.user_id))
+			else:
+				print('Ошибка: {0}. id: {1}. Сведения об ошибке: {2}'
+						.format(response['error_code'], self.user_id, response['info']))
 
 	def get_unique_groups_id(self):
 		friends_list = self.friends_list()
-
-		all_groups_set = set()
 		excluded_friends_id = []
-		a = 0
-		friends_num = len(friends_list)
-		for friend_id in friends_list:
-			a += 1
-			if a % 20 == 0:
-				print('. Обработано {} из {} друзей. Осталось {}'.format(a, friends_num, friends_num - a))
-			else:
-				print('.')
-			vk_friend = VkUser(friend_id)
-			new_groups_list = vk_friend.groups_list()
-			if new_groups_list != 0:
-				if 'blocked' not in new_groups_list:
-					all_groups_set.update(new_groups_list)
+		unique_groups_id = []
+		if 'error_code' in friends_list:
+			self.print_errors(friends_list)
+		else:
+			friends_list = friends_list['items']
+			all_groups_set = set()
+			a = 0
+			friends_num = len(friends_list)
+			for friend_id in friends_list:
+				a += 1
+				if a % 20 == 0:
+					print('. Обработано {} из {} друзей. Осталось {}'.format(a, friends_num, friends_num - a))
 				else:
-					excluded_friends_id.append(friend_id)
-		user_groups = set(self.groups_list())
-		unique_groups_id = list(user_groups - all_groups_set)
+					print('.')
+				vk_friend = VkUser(friend_id)
+				new_groups_list = vk_friend.groups_list()
+				if 'error_code' in new_groups_list:
+					if new_groups_list['error_code'] == ERR_CODE_BLOCKED:
+						excluded_friends_id.append(friend_id)
+					else:
+						vk_friend.print_errors(new_groups_list)
+				else:
+					all_groups_set.update(new_groups_list['items'])
+			user_groups = set(self.groups_list()['items'])
+			unique_groups_id = list(user_groups - all_groups_set)
 		return unique_groups_id, excluded_friends_id
 
 	def get_groups_info(self, group_ids, fields=None):
@@ -151,7 +153,7 @@ class VkUser(VkBase):
 		if fields is not None:
 			fields = fields.split(',')
 			for group in groups_info:
-				group_info = {key: str(group[key]) for key in fields if key in group.keys()}
+				group_info = {key: str(group[key]) for key in fields if key in group}
 				group_info_list.append(group_info)
 		else:
 			group_info_list = groups_info
@@ -160,49 +162,26 @@ class VkUser(VkBase):
 
 def create_json_file(group_info_list):
 	file_name = "groups.json"
-	path_to_file = os.path.join(os.getcwd(), file_name)
-	with open(path_to_file, "w", encoding='utf8') as rfile:
+	with open(file_name, "w", encoding='utf8') as rfile:
 		json.dump(group_info_list, rfile, ensure_ascii=False)
-
-
-def response_handle(response, user_id=0, mode=0):
-	if 'info' in response.keys():
-		if 'error_code' in response.keys() and response['error_code'] == ERR_CODE_BLOCKED:
-			if mode != 0:
-				print("Аккаунт пользователя (id - {}) заблокирован или удален".format(user_id))
-				result_list = 0
-			else:
-				result_list = ['blocked']
-		elif 'error_code' in response.keys():
-			print(
-				'Ошибка: {0}. id: {1}. Сведения об ошибке: {2}'.format(response['error_code'], user_id, response['info']))
-			result_list = 0
-		else:
-			print('Сведения об исключении:', response['info'])
-			result_list = 0
-	else:
-		result_list = response['items']
-	return result_list
 
 
 def start_run():
 	first_id = input('Введите имя пользователя (screen_name) или id:')
-	return first_id
+	first_user = VkUser(first_id)
+	first_user.set_real_id()
+	unique_groups, blocked_ids = first_user.get_unique_groups_id()
+	if not unique_groups:
+		print("Нет уникальных групп для пользователя {}".format(first_id))
+	else:
+		un_groups_info_list = first_user.get_groups_info(unique_groups, FIELDS)
+		create_json_file(un_groups_info_list)
+		print("Из поиска групп были исключены заблокированные/удаленные id друзей: {}".format(blocked_ids))
+		with open("groups.json", "r", encoding='utf8') as rf:
+			my_json = rf.read()
+			json_object = json.loads(my_json)
+			pprint(json_object)
 
 
 if __name__ == "__main__":
-	start_id = start_run()
-first_user = VkUser(start_id)
-search_groups_result = first_user.get_unique_groups_id()
-unique_groups = search_groups_result[0]
-if not unique_groups:
-	print("Нет уникальных групп для пользователя {}".format(start_id))
-else:
-	un_groups_info_list = first_user.get_groups_info(unique_groups, FIELDS)
-	create_json_file(un_groups_info_list)
-	blocked_ids = search_groups_result[1]
-	print("Из поиска групп были исключены заблокированные/удаленные id друзей: {}".format(blocked_ids))
-	with open(os.path.join(os.getcwd(), "groups.json"), "r", encoding='utf8') as rf:
-		my_json = rf.read()
-		json_object = json.loads(my_json)
-		pprint(json_object)
+	start_run()
