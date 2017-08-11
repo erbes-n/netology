@@ -126,12 +126,11 @@ class VkUser(VkBase):
 		else:
 			friends_list = friends_list['items']
 			all_groups_set = set()
-			a = 0
 			friends_num = len(friends_list)
-			for friend_id in friends_list:
-				a += 1
-				if a % 20 == 0:
-					print('. Обработано {} из {} друзей. Осталось {}'.format(a, friends_num, friends_num - a))
+			for a, friend_id in enumerate(friends_list):
+				idx = a + 1
+				if idx % 20 == 0:
+					print('. Обработано {} из {} друзей. Осталось {}'.format(idx, friends_num, friends_num - idx))
 				else:
 					print('.')
 				vk_friend = VkUser(friend_id)
@@ -178,8 +177,7 @@ def start_run():
 		create_json_file(un_groups_info_list)
 		print("Из поиска групп были исключены заблокированные/удаленные id друзей: {}".format(blocked_ids))
 		with open("groups.json", "r", encoding='utf8') as rf:
-			my_json = rf.read()
-			json_object = json.loads(my_json)
+			json_object = json.load(rf)
 			pprint(json_object)
 
 
