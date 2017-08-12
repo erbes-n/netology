@@ -127,10 +127,9 @@ class VkUser(VkBase):
 			friends_list = friends_list['items']
 			all_groups_set = set()
 			friends_num = len(friends_list)
-			for a, friend_id in enumerate(friends_list):
-				idx = a + 1
-				if idx % 20 == 0:
-					print('. Обработано {} из {} друзей. Осталось {}'.format(idx, friends_num, friends_num - idx))
+			for a, friend_id in enumerate(friends_list, start=1):
+				if a % 20 == 0:
+					print('. Обработано {} из {} друзей. Осталось {}'.format(a, friends_num, friends_num - a))
 				else:
 					print('.')
 				vk_friend = VkUser(friend_id)
